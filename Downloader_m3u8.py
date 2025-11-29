@@ -5,6 +5,8 @@ import webbrowser
 import requests
 import sys
 import subprocess
+import zipfile
+import urllib.request
 from pathlib import Path
 from datetime import datetime
 from urllib.parse import urljoin,urlparse
@@ -190,6 +192,45 @@ def auto_download():
             print(f"{Fore.RED}[-] Error : {Fore.RESET}{e}")
     return None
 
+
+def check_ffmpeg():
+    try:
+        # เช็ค ffmpeg ใน PATH
+        subprocess.run(["ffmpeg", "-version"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=True)
+        print(f"{Fore.GREEN}[+] ffmpeg is already installed.{Fore.RESET}")
+        return True
+    except Exception:
+        print(f"{Fore.BLUE}[*] ffmpeg not found, installing...{Fore.RESET}")
+
+        # สร้างโฟลเดอร์สำหรับ ffmpeg ใน project
+        ffmpeg_dir = Path("ffmpeg_bin")
+        ffmpeg_dir.mkdir(exist_ok=True)
+
+        # URL สำหรับ ffmpeg Windows static build (64-bit)
+        ffmpeg_url = "https://www.gyan.dev/ffmpeg/builds/ffmpeg-release-essentials.zip"
+        zip_path = ffmpeg_dir / "ffmpeg.zip"
+
+        # ดาวน์โหลด
+        print(f"{Fore.BLUE}[*] Downloading ffmpeg...{Fore.RESET}")
+        urllib.request.urlretrieve(ffmpeg_url, zip_path)
+
+        # แตก zip
+        print(f"{Fore.BLUE}[*] Extracting ffmpeg...{Fore.RESET}")
+        with zipfile.ZipFile(zip_path, 'r') as zip_ref:
+            zip_ref.extractall(ffmpeg_dir)
+        zip_path.unlink()  # ลบ zip หลัง extract
+
+        # หา path ของ ffmpeg.exe ที่ extract มา
+        ffmpeg_exe = list(ffmpeg_dir.glob("ffmpeg-*-essentials_build/bin/ffmpeg.exe"))
+        if not ffmpeg_exe:
+            print(f"{Fore.RED}[-] ffmpeg executable not found after extraction!{Fore.RESET}")
+            return False
+
+        ffmpeg_path = ffmpeg_exe[0]
+        print(f"{Fore.GREEN}[+] ffmpeg installed at {Fore.RESET}{ffmpeg_path}")
+        return ffmpeg_path
+
+
 def logo():
     logo_lines = [
         " ██████╗    █████╗   ██████╗  ██╗   ██╗ ██╗  ██╗  ██████╗   ██████╗  ██╗  ██╗",
@@ -288,4 +329,6 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    ffmpeg_path = check_ffmpeg()
+    if ffmpeg_path :
+        main()
