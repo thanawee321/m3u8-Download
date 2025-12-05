@@ -4,6 +4,7 @@ https://ezycdn.com/playlist-mm8v728-master.m3u8
 https://ezycdn.com/playlist-oaumhk8-master.m3u8
 https://ezycdn.com/playlist-74ddtkoa-master.m3u8
 https://ezycdn.com/playlist-6il5ou8-master.m3u8
+https://ezycdn.com/playlist-usiakio-SD.m3u8 *New
 https://ap.travapo.com/f6beb48a-deec-4fc6-b827-cf47571b5f69/files/playlist.m3u8
 https://ap.travapo.com/9a5b5700-34c1-4670-a826-4a23dff1b1c0/files/playlist.m3u8
 https://ap.travapo.com/ab883970-0106-4f83-b677-1377cd31b97e/files/playlist.m3u8
@@ -16,7 +17,19 @@ https://ap.travapo.com/7ce5fb64-d09f-4929-90cb-48e333d9ed16/files/playlist.m3u8
 https://ap.travapo.com/a9f4f683-8b0b-4864-8193-a4a178750821/files/playlist.m3u8
 https://ap.travapo.com/2993464d-859d-41d8-a146-4c2e77d4acfd/files/playlist.m3u8
 https://ap.travapo.com/26d14c8c-ed15-4617-957e-acddb9b3a5ef/files/playlist.m3u8 *New
+https://ap.travapo.com/6a0c3dfb-1f8c-4a53-939e-fa1a6634fc48/files/playlist.m3u8 *New
+https://ap.travapo.com/21fc532d-2a36-4333-9c77-f2d6b76c42a1/files/playlist.m3u8 *New
+https://ap.travapo.com/5a9fa811-7fed-4e15-8b03-39466a81c292/files/playlist.m3u8 *New
+https://ap.travapo.com/fc01066b-d9cc-48c1-b946-3be6f85a01a4/files/playlist.m3u8 *New
+https://ap.travapo.com/c3f7caf2-c66b-477d-8f88-9a9cb8985640/files/playlist.m3u8 *New
+https://ap.travapo.com/2512eca1-a33a-45cf-863f-af115881a3e0/files/playlist.m3u8 *New
+https://vz-65f18e7e-3fe.b-cdn.net/1396e006-bb9c-429b-a694-84f3b2d57a2c/playlist.m3u8 *New
+https://vz-65f18e7e-3fe.b-cdn.net/de595765-227f-43b6-bfa6-dc312c463fc4/playlist.m3u8 *New
 https://vz-65f18e7e-3fe.b-cdn.net/4cbf8b42-04f8-4a33-891a-3929fde6e40a/480p/video.m3u8
 https://vz-65f18e7e-3fe.b-cdn.net/ffa7f2ea-49b9-4a0c-a908-d12747555128/720p/video.m3u8
 https://lm.auroraporta.com/b79dab30f98dd49e7fe5781d0482cad3/b79dab30f98dd49e7fe5781d0482cad3.m3u8
+https://lm.auroraporta.com/b137eb41217d51d62519a7bc0011c4bf/b137eb41217d51d62519a7bc0011c4bf.m3u8 *New
+
+
+
 
