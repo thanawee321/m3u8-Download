@@ -33,6 +33,8 @@ https://vz-65f18e7e-3fe.b-cdn.net/4cbf8b42-04f8-4a33-891a-3929fde6e40a/480p/vide
 https://vz-65f18e7e-3fe.b-cdn.net/ffa7f2ea-49b9-4a0c-a908-d12747555128/720p/video.m3u8
 https://lm.auroraporta.com/b79dab30f98dd49e7fe5781d0482cad3/b79dab30f98dd49e7fe5781d0482cad3.m3u8
 https://lm.auroraporta.com/b137eb41217d51d62519a7bc0011c4bf/b137eb41217d51d62519a7bc0011c4bf.m3u8
+https://cdn.cdndlap.com/backup/src/hls/Enkai987_-_Lin_ep.2_179297_02-55-01am_2024-11-21_hls.m3u8/Enkai987_-_Lin_ep.2_179297_02-55-01am_2024-11-21_hls.m3u8 *New
+
 
 
 
