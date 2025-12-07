@@ -31,7 +31,7 @@ class banner:
         " ██╔══██╗  ██╔══██║  ██╔══██╗   ╚██╔╝   ██╔══██║ ██║ █ ██║ ██║       ██╔ ██╗ ",
         " ██████╔╝  ██║  ██║  ██████╔╝    ██║    ██║  ██║ ██║ ████║ ██║   ██╗ ██╔══██╗",
         " ╚═════╝   ╚═╝  ╚═╝  ╚═════╝     ╚═╝    ╚═╝  ╚═╝  ╚══╝╚══╝ ╚██████╔╝ ╚═╝  ╚═╝",
-        "                                                   (Tool m3u8 Downloads_V2.7)"
+        "                                                   (Tool m3u8 Downloads_V3.1)"
         ]
 
         return "\n".join([Fore.GREEN + line + Style.RESET_ALL for line in logo_lines]) + "\n"
@@ -41,7 +41,7 @@ class banner:
     def infomation():
         width = 60
 
-        version = "2.7"
+        version = "3.1"
         dev_by = "BabyH@ck"
         facebook = "https://www.facebook.com/thanawee321"
         youtube = "https://www.youtube.com/@BabyHackSenior" 
@@ -239,7 +239,7 @@ class m3u8:
         self.ffmpeg_path = ffmpeg_path
         self.url_m3u8 = url_m3u8
         self.output_file = output_file
-        self.max_retries = 5
+        self.max_retries = 10
         self.success_downloads = []
         self.failed_downloads = []
 
@@ -251,17 +251,22 @@ class m3u8:
         if "#EXT-X-STREAM-INF" in content:
             lines = [line.strip() for line in content.split("\n") if line and not line.startswith("#")]
             url = urljoin(self.url_m3u8,lines[-1])
+
             response = session.get(url,timeout=10)
             response.raise_for_status()
             content = response.text
+            self.url_m3u8 = url #NEW UPDATE อัปเดต base URL ไปยัง Variant Playlist เพื่อใช้สำหรับ urljoin ใน Segment
+
 
         key = None
         iv = None
         ts_file = []
+        start_sequence = 0
 
         for line in content.split("\n"):
             line = line.strip()
 
+            #ดึง Encryption Key และ Explicit IV
             if line.startswith("#EXT-X-KEY"):
                 
                 if 'URI="' in line:
@@ -269,17 +274,25 @@ class m3u8:
                     key_url = urljoin(self.url_m3u8, uri_part)
                     key_response = session.get(key_url,timeout=10).content
                     key = key_response
-
+                    # กรณีมี Explicit IV กำหนด
                     if "IV=" in line:
                         iv_hex = line.split("IV=")[1].split(",")[0].replace("0x", "")
                         iv = bytes.fromhex(iv_hex)
                     else:
                         iv = key_response[:16] or iv == None
 
+            elif line.startswith("#EXT-X-MEDIA-SEQUENCE:"):
+                try:
+                    # ดึงค่า N จาก #EXT-X-MEDIA-SEQUENCE:N
+                    start_sequence = int(line.split(":")[1].split(",")[0].strip())
+                except ValueError:
+                    start_sequence = 0
+
+                    #ดึงรายการ Segment
             elif line and not line.startswith("#"):
                 ts_file.append(line)
 
-        return ts_file, self.url_m3u8, key, iv
+        return ts_file, self.url_m3u8, key, iv,start_sequence
     
 
     
@@ -304,15 +317,18 @@ class m3u8:
                     raise Exception("Downloaded segment is empty.")
                 
                 sys.stdout.write("\r" + " " * 100 + "\r")
-                sys.stdout.write(f"{Fore.GREEN}[{index}/{total_ts}] Downloading : {Fore.RESET}{ts_url}")
+                sys.stdout.write(f"{Fore.GREEN}[{index}/{total_ts}] Downloading : {Fore.RESET}{os.path.basename(ts_url)}")
                 sys.stdout.flush()
-
+                
                 return True
-            
+                
             except Exception as e:
-                sys.stdout.write("\n")
+                
                 if attempt < self.max_retries:
-                    print(f"{Fore.YELLOW}[*] Retry {attempt}/{self.max_retries} for {ts_url}: {e}{Fore.RESET}")
+                    # เคลียร์บรรทัดและแสดงข้อความ retry ในบรรทัดเดียวกัน
+                    sys.stdout.write("\r" + " " * 100 + "\r")
+                    sys.stdout.write(f"{Fore.YELLOW}[*] Retry {attempt}/{self.max_retries} for {os.path.basename(ts_url)}: {e}{Fore.RESET}")
+                    sys.stdout.flush()
                     time.sleep(1)
                 else:
                     self.failed_downloads.append(ts_url)
@@ -338,7 +354,7 @@ class m3u8:
         session.headers.update(headers)
 
         obj_m3u8_for_parse = m3u8(self.url_m3u8,self.output_file) 
-        ts_files , base_url ,key , iv = obj_m3u8_for_parse.parse_m3u8(session)
+        ts_files , base_url ,key , iv , start_sequence = obj_m3u8_for_parse.parse_m3u8(session)
         if not ts_files:
             print(f"{Fore.RED}[-] No segments found in the m3u8 playlist.{Fore.RESET}")
             return False
@@ -356,14 +372,15 @@ class m3u8:
         for i, ts_name in enumerate(ts_files):
             current_iv = iv
             if key is not None and current_iv is None:
-                sequence_number = i # Segment index (0, 1, 2, ...)
-                sequence_bytes = sequence_number.to_bytes(8, byteorder='big')
-                current_iv = b'\x00' * 8 + sequence_bytes
-            
+                sequence_number = start_sequence + i # Segment index (0, 1, 2, ...)
+                #sequence_bytes = sequence_number.to_bytes(8, byteorder='big')
+                #current_iv = b'\x00' * 8 + sequence_bytes //ค่าเดิม 8-byte padded
+                current_iv = sequence_number.to_bytes(16, byteorder='big') #//ค่ามาตารฐาน 16-byte padded
+
             seg_path = f"Segments/segment_{i}.ts"
             ts_url = urljoin(base_url, ts_name)
             obj_m3u8_for_segment = m3u8(self.url_m3u8,self.output_file)
-            obj_m3u8_for_segment.download_segment(session,ts_url,seg_path,i+1,len(ts_files),key,iv)
+            obj_m3u8_for_segment.download_segment(session,ts_url,seg_path,i+1,len(ts_files),key,current_iv)
 
             segment_files.append(seg_path)
 
@@ -404,9 +421,7 @@ class m3u8:
         self.success_downloads.append(f"{Fore.GREEN}[URL : {Fore.RESET}{self.url_m3u8}{Fore.GREEN}] → [File : {Fore.RESET}{self.output_file}{Fore.GREEN}]")
 
         return self.success_downloads
-
-
-
+    
 class menu_downloader:
 
 
@@ -446,34 +461,47 @@ class menu_downloader:
             print(f"{Fore.RED}[-] Error processing URL: {e}{Fore.RESET}")
             return None
 
-            
-                
-                
+
     def auto_download(self):
         
-
+        success_results = []
+        failed_results = []
         count_url = 0
+        
         with open('m3u8_urls.txt', 'r',encoding='utf-8') as f:
             lines = [line.strip() for line in f if line.strip()]
         total_url = len(lines)
 
         for url in lines:
             count_url+=1
-
             try:
                 timestamp = datetime.now().strftime("%y%m%d%H%M%S")
                 output_file = f"Videos/download_video_{timestamp}.mp4"
                 download_m3u8 = m3u8(url.strip(), output_file)
                 download_m3u8.download_m3u8(count_url,total_url)
 
+                if download_m3u8.success_downloads:
+                    success_results.extend(download_m3u8.success_downloads)
+                if download_m3u8.failed_downloads:
+                    failed_results.extend(download_m3u8.failed_downloads)
+
             except Exception as e:
                 print(f"{Fore.RED}[-] Error : {e}{Fore.RESET}")
+                failed_results.append(f"{Fore.RED}[URL : {Fore.RESET}{url}{Fore.RED}] → [Error : {e}]{Fore.RESET}")
+
+        print("\n" + "="*20 + " Download Summary " + "="*20)
+        print(f"\n{Fore.GREEN}Successful Downloads : [{Fore.RESET}{len(success_results)}/{len(lines)}{Fore.CYAN}]{Fore.RESET}{Fore.RESET}")
+        for result in success_results:
+
+            print(result)
+        
+        
+        if failed_results:
+            print(f"\n{Fore.RED}Failed Downloads:{Fore.RESET}")
+            for result in failed_results:
+                print(result)
 
         
-
-
-
-
 def main():
     global ffmpeg_path
 
@@ -530,11 +558,6 @@ def main():
 
         except ValueError:
             print(f"{Fore.YELLOW}[!] Invalid input. Please enter a number.{Fore.RESET}")
-
-    
-    
-
-
 
 
 if __name__ == "__main__":
